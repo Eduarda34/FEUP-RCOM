@@ -8,13 +8,43 @@
 
 ////////////////////////////////////////////////
 // LLOPEN
+// Returns "1" in case of success, or "-1" in case of error.
 ////////////////////////////////////////////////
 int llopen(LinkLayer connectionParameters)
 {
-    if (openSerialPort(connectionParameters.serialPort,
-                       connectionParameters.baudRate) < 0)
+    int fd = openSerialPort(connectionParameters.serialPort,
+                       connectionParameters.baudRate);
+
+    // Check if openSerialPort has error
+    if (fd < 0)
     {
         return -1;
+    }
+
+    unsigned char byte;
+    int timeout = connectionParameters.timeout;
+    int nretransmissions = connectionParameters.nRetransmissions;
+
+    switch(connectionParameters.role) {
+        // Check only the Receiver stuff
+        case LlRx:
+            // while 
+            if(read(fd,&byte, 1) > 0) {
+                if(byte ==  0x7E) {
+                    break;
+                }
+                if(connectionParameters.timeout==0) break;
+            }
+            
+        // Check the Transmitter and Receiver
+        case LlTx:
+            // while 
+            if(connectionParameters.timeout==0) break;
+
+        default:
+            return -1;
+            break;
+
     }
 
     // TODO
@@ -24,6 +54,7 @@ int llopen(LinkLayer connectionParameters)
 
 ////////////////////////////////////////////////
 // LLWRITE
+// Returns number of written chars, or "-1" in case of error.
 ////////////////////////////////////////////////
 int llwrite(const unsigned char *buf, int bufSize)
 {
@@ -34,6 +65,7 @@ int llwrite(const unsigned char *buf, int bufSize)
 
 ////////////////////////////////////////////////
 // LLREAD
+// Returns number of written chars, or "-1" in case of error.
 ////////////////////////////////////////////////
 int llread(unsigned char *packet)
 {
@@ -44,6 +76,7 @@ int llread(unsigned char *packet)
 
 ////////////////////////////////////////////////
 // LLCLOSE
+// Returns "1" in case of success, or "-1" in case of error.
 ////////////////////////////////////////////////
 int llclose(int showStatistics)
 {
