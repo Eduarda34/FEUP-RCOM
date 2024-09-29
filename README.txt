@@ -1,11 +1,11 @@
-Projeto rcom"
-# RCOM_PROJ1_T?G?
+Projeto RCOM
+#RCOM_PROJ1_T?G?
 
-## Project Description
+##Project Description
 
 This is a C application designed to learn about Data Link Protocol.
 
-## Installation and Usage
+##Installation and Usage
 
 To run our application, follow these simple steps:
 
@@ -15,8 +15,7 @@ To run our application, follow these simple steps:
 
 
 
-## Collaboration
+##Collaboration
 
-- Eduardaaaaaaa
 - Clarisse Maria Teixeira de Carvalho, up202008444
-
+- Maria Eduarda Pacheco Mendes Araújo, up202004473
