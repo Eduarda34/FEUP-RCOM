@@ -2,6 +2,7 @@
 
 #include "link_layer.h"
 #include "serial_port.h"
+#include "frame_functions.h"
 
 // MISC
 #define _POSIX_SOURCE 1 // POSIX compliant source
@@ -47,7 +48,7 @@ int llopen(LinkLayer connectionParameters)
         case LlTx:
             // while 
             if(connectionParameters.timeout==0) break;
-            if (send_s_frame(fd,DDR,0X0(fd) < 0)
+            if(send_frame(fd,DDR,0X0(fd) < 0)
             {
                 return -1;
             }
