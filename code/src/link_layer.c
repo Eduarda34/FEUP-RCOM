@@ -6,6 +6,13 @@
 // MISC
 #define _POSIX_SOURCE 1 // POSIX compliant source
 
+// Global Variables
+unsigned char byte;
+int timeout = 0;
+int nretransmissions = 0;
+
+
+
 ////////////////////////////////////////////////
 // LLOPEN
 // Returns "1" in case of success, or "-1" in case of error.
@@ -21,9 +28,9 @@ int llopen(LinkLayer connectionParameters)
         return -1;
     }
 
-    unsigned char byte;
-    int timeout = connectionParameters.timeout;
-    int nretransmissions = connectionParameters.nRetransmissions;
+
+    timeout = connectionParameters.timeout;
+    nretransmissions = connectionParameters.nRetransmissions;
 
     switch(connectionParameters.role) {
         // Check only the Receiver stuff
@@ -40,7 +47,10 @@ int llopen(LinkLayer connectionParameters)
         case LlTx:
             // while 
             if(connectionParameters.timeout==0) break;
-
+            if (send_s_frame(fd,DDR,0X0(fd) < 0)
+            {
+                return -1;
+            }
         default:
             return -1;
             break;

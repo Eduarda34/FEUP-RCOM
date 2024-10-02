@@ -14,6 +14,7 @@
 // MISC
 #define _POSIX_SOURCE 1 // POSIX compliant source
 
+
 int fd = -1;           // File descriptor for open serial port
 struct termios oldtio; // Serial port settings to restore on closing
 
