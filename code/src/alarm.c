@@ -1,5 +1,8 @@
 // Alarm functions implementation
 
+#include <alarm.h>
+
+
 int alarm_flag = FALSE;
 int alarm_count = 0;
 

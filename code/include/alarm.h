@@ -3,6 +3,8 @@
 #ifndef _ALARM_H_
 #define _ALARM_H_
 
+#define TRUE 1
+#define FALSE 0
 
 #include <unistd.h>
 #include <signal.h>
