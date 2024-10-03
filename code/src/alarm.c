@@ -5,7 +5,7 @@
 int alarm_flag = FALSE;
 int alarm_count = 0;
 
-void reset_alarm_count(){
+void reset_alarm_count() {
     alarm_count = 0;
 }
 
