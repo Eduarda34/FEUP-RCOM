@@ -16,7 +16,7 @@
 
 typedef enum 
 {
-    COMMAND_SET,        // Set Command 0x03?? 
+    COMMAND_SET,        // Set Command 
     COMMAND_DISC,       // Disconnect Command
     COMMAND_DATA,       // ??
     R_UA,               // ??

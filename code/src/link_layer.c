@@ -11,12 +11,6 @@ unsigned char byte;
 int timeout = 0;
 int nretransmissions = 0;
 
-
-
-////////////////////////////////////////////////
-// LLOPEN
-// Returns "1" in case of success, or "-1" in case of error.
-////////////////////////////////////////////////
 int llopen(LinkLayer connectionParameters)
 {
     int fd = openSerialPort(connectionParameters.serialPort,
@@ -33,10 +27,6 @@ int llopen(LinkLayer connectionParameters)
     return 1;
 }
 
-////////////////////////////////////////////////
-// LLWRITE
-// Returns number of written chars, or "-1" in case of error.
-////////////////////////////////////////////////
 int llwrite(const unsigned char *buf, int bufSize)
 {
     // TODO
@@ -44,10 +34,6 @@ int llwrite(const unsigned char *buf, int bufSize)
     return 0;
 }
 
-////////////////////////////////////////////////
-// LLREAD
-// Returns number of written chars, or "-1" in case of error.
-////////////////////////////////////////////////
 int llread(unsigned char *packet)
 {
     // TODO
@@ -55,10 +41,6 @@ int llread(unsigned char *packet)
     return 0;
 }
 
-////////////////////////////////////////////////
-// LLCLOSE
-// Returns "1" in case of success, or "-1" in case of error.
-////////////////////////////////////////////////
 int llclose(int showStatistics)
 {
     // TODO
