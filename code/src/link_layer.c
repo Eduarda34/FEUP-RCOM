@@ -2,7 +2,6 @@
 
 #include "link_layer.h"
 #include "serial_port.h"
-#include "frame_functions.h"
 
 // MISC
 #define _POSIX_SOURCE 1 // POSIX compliant source
@@ -27,32 +26,6 @@ int llopen(LinkLayer connectionParameters)
     if (fd < 0)
     {
         return -1;
-    }
-
-
-    timeout = connectionParameters.timeout;
-    nretransmissions = connectionParameters.nRetransmissions;
-
-    switch(connectionParameters.role) {
-        // Check only the Receiver stuff
-        case LlRx:
-            // while 
-            if(read(fd,&byte, 1) > 0) {
-                if(byte ==  0x7E) {
-                    break;
-                }
-                if(connectionParameters.timeout==0) break;
-            }
-            
-        // Check the Transmitter and Receiver
-        case LlTx:
-            // while 
-            if(connectionParameters.timeout==0) break;
-            
-        default:
-            return -1;
-            break;
-
     }
 
     // TODO
