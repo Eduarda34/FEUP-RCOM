@@ -2,6 +2,25 @@
 #define _FRAME_
 
 #include <stdlib.h>
+#include <stdint.h>
+#include <string.h>
+
+#define BCC(a, b) ((a) ^ (b))
+#define ADDR_E 0x03
+#define CTRL_S(s) ((s == 0) ? 0 : BIT(6))
+
+#define CTRL_SET 0x03
+#define CTRL_DISC 0x0B
+#define CTRL_UA 0x07
+#define CTRL_RR(r) ((r == 0) ? 0x05 : 0x85)
+#define CTRL_REJ(r) ((r == 0) ? 0x01 : 0x81)
+
+#define MSG_MAX_SIZE 1000
+
+#define NO_RESP -1
+
+#define RR_1 0x85  // Define the correct value
+#define RR_0 0x05  // Define the correct value
 
 // Define the structure for the S-frame
 typedef struct

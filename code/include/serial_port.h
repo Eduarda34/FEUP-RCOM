@@ -4,6 +4,13 @@
 #ifndef _SERIAL_PORT_H_
 #define _SERIAL_PORT_H_
 
+#include <stdio.h>
+#include <string.h>
+
+// MISC
+#define _POSIX_SOURCE 1 // POSIX compliant source
+
+
 // Open and configure the serial port.
 // Returns -1 on error.
 int openSerialPort(const char *serialPort, int baudRate);
