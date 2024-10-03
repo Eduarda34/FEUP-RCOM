@@ -14,8 +14,7 @@
 #define BIT(n) (1 << n)
 
 
-typedef enum 
-{
+typedef enum {
     COMMAND_SET,        // Set Command 
     COMMAND_DISC,       // Disconnect Command
     COMMAND_DATA,       // ??
@@ -24,15 +23,13 @@ typedef enum
 } command;
 
 
-typedef enum 
-{
+typedef enum {
     TRANSMITTER,    // Machine Role Transmitter
     RECEIVER        // Machine Role Receiver
 } role;
 
 
-typedef enum 
-{
+typedef enum {
     R_NULL,         // ??
     UA,             // ??
     PR_0,           // ??
@@ -42,8 +39,7 @@ typedef enum
 } response;
 
 
-typedef enum 
-{
+typedef enum {
     START,          // Start State
     FLAG_RCV,       // Flag State Received 
     ADDRESS_RCV,    // Address Received
@@ -55,8 +51,7 @@ typedef enum
 
 
 
-typedef struct 
-{
+typedef struct  {
     state CURR_STATE;       // Current State
     uint8_t ADDRESS;        // Address Byte
     uint8_t CONTROL;        // Control Byte
@@ -68,31 +63,91 @@ typedef struct
 
 
 // Getters
+/**
+ * @brief Get the address object
+ * @return unsigned char 
+ */
 unsigned char get_address();
+
+/**
+ * @brief Get the control object
+ * @return unsigned char 
+ */
 unsigned char get_control();
+
+/**
+ * @brief Get the curr state object
+ * @return state 
+ */
 state get_curr_state();
+
+/**
+ * @brief Get the curr role object
+ * @return role 
+ */
 role get_curr_role();
+
+/**
+ * @brief Get the curr command object
+ * @return command 
+ */
 command get_curr_command();
+
+/**
+ * @brief Get the prev response object
+ * @return response 
+ */
 response get_prev_response();
 
 
-
 // Setters
+/**
+ * @brief Set the address object
+ * @param s 
+ */
 void set_address(unsigned char s);
+
+/**
+ * @brief Set the control object
+ * @param s 
+ */
 void set_control(unsigned char s);
+
+/**
+ * @brief Set the state object
+ * @param s 
+ */
 void set_state(state s);
+
+/**
+ * @brief Set the role object
+ * @param r 
+ */
 void set_role(role r);
+
+/**
+ * @brief Set the command object
+ * @param c 
+ */
 void set_command(command c);
+
+/**
+ * @brief Set the response object
+ * @param r 
+ */
 void set_response(response r);
 
 
 // Others functions
+/**
+ * @brief updates the current state of the state machine based on the received byte
+ * @param byte - to be processed by the state machine
+ */
 void update_state(unsigned char byte);
 
+/**
+ * @brief resets the state machine to its initial state
+ */
 void reset_state();
-
-
-
-
 
 #endif // _STATE_
