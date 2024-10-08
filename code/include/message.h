@@ -1,9 +1,11 @@
+#pragma once
+
 #ifndef _MESSAGE_
 #define _MESSAGE_
 
 #include <state.h>
 #include <frame.h>
-#include <alarm.h>
+#include "alarm.h"
 
 #include <fcntl.h>
 #include <stdio.h>

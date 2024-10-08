@@ -1,5 +1,5 @@
 #include "message.h"
-
+#include "alarm.h"
 
 
 int send_s_frame(int fd, uint8_t address, uint8_t control, command response) {
