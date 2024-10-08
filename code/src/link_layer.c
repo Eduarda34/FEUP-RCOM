@@ -3,6 +3,7 @@
 #include "link_layer.h"
 #include "serial_port.h"
 #include "state.h"
+#include "message.h"
 
 #include <iostream>
 #include <string.h>
@@ -14,11 +15,23 @@
 unsigned char byte;
 int timeout = 0;
 int nretransmissions = 0;
+int fd;
 
+int startTransmissor (int fd) {return send_s_frame(fd, ADDR, 0X03, R_UA);}
 
+int startReceiver (int fd) {
+    unsigned char message[5];
 
+    if (read_message(fd, message, 5, COMMAND_SET) < 0) return -1;
+
+    return send_s_frame(fd, ADDR, 0x07, NO_RESP);
+}
+
+//LLPOPEN
 int llopen(LinkLayer connectionParameters) {
-    int fd = openSerialPort(connectionParameters.serialPort, connectionParameters.baudRate);
+    fd = openSerialPort(connectionParameters.serialPort, connectionParameters.baudRate);
+    struct termios newtio;
+    
 
     // Check if openSerialPort has error
     if (fd < 0) {
@@ -29,7 +42,6 @@ int llopen(LinkLayer connectionParameters) {
 
     
 
-    // TODO
 
     return 1;
 }
