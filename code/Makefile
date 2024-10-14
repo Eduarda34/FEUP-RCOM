@@ -10,8 +10,8 @@ INCLUDE = include/
 BIN = bin/
 CABLE_DIR = cable/
 
-TX_SERIAL_PORT = /dev/ttyS10
-RX_SERIAL_PORT = /dev/ttyS11
+TX_SERIAL_PORT = /dev/ttyS12
+RX_SERIAL_PORT = /dev/ttyS13
 
 BAUD_RATE = 9600
 
