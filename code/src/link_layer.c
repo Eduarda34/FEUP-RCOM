@@ -87,7 +87,6 @@ int closeReceiver(int fd) {
 }
 
 
-//LLPOPEN
 int llopen(LinkLayer connectionParameters) {
     
     // Open the serial port with specified parameters
@@ -199,9 +198,51 @@ int llwrite(const unsigned char *buf, int bufSize) {
 
 
 int llread(unsigned char *packet) {
-    // TODO
+    unsigned char stuffed_msg[MSG_MAX_SIZE * 2]; // To hold the received stuffed message
+    unsigned char destuffed_msg[MSG_MAX_SIZE];   // To hold the destuffed message
+    int bytes;
 
-    return 0;
+    // Attempt to read the message from the serial port
+    bytes = read_message(fd, stuffed_msg, sizeof(stuffed_msg), COMMAND_DATA);
+
+    // Check for errors during reading
+    if (bytes == -1) {
+        perror("Error reading message");
+        return -1;
+    }
+
+    printf("llread: %d bytes read\n", bytes);
+
+    // Perform message de-stuffing
+    int destuffed_len = msg_destuff(stuffed_msg, 4, bytes, destuffed_msg);
+
+    // Ensure the message size is valid
+    if (destuffed_len < 6) { // At least FLAG, ADDR, CONTROL, BCC1, BCC2, FLAG
+        printf("llread: Invalid message length\n");
+        return -1;
+    }
+
+    // Verify the BCC1 for header (ADDR ^ CONTROL)
+    if (destuffed_msg[1] ^ destuffed_msg[2] != destuffed_msg[3]) {
+        printf("llread: BCC1 verification failed\n");
+        return -1;
+    }
+
+    // Calculate BCC2 for the data field
+    uint8_t received_bcc2 = destuffed_msg[destuffed_len - 2]; // Second-to-last byte is BCC2
+    uint8_t calculated_bcc2 = generate_bcc2(destuffed_msg + 4, destuffed_len - 6); // Skip FLAG, ADDR, CONTROL, BCC1, FLAG
+
+    // Verify the BCC2 for the data field
+    if (received_bcc2 != calculated_bcc2) {
+        printf("llread: BCC2 verification failed\n");
+        return -1;
+    }
+
+    // If everything is correct, copy the data to the provided packet buffer
+    memcpy(packet, destuffed_msg + 4, destuffed_len - 6); // Copy only the data, skipping FLAGs, ADDR, CONTROL, BCCs
+
+    printf("llread: Message successfully read and verified\n");
+    return destuffed_len - 6; // Return the number of data bytes
 }
 
 int llclose(int showStatistics) {
