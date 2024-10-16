@@ -54,7 +54,6 @@ int llopen(LinkLayer connectionParameters) {
     cfsetospeed(&newtio, connectionParameters.baudRate);
 
     newtio.c_cflag = connectionParameters.baudRate | CS8 | CLOCAL | CREAD;
-    newtio.c_cflag &= ~CRTSCTS;
     newtio.c_lflag &= ~(ICANON | ECHO | ECHOE | ISIG);
     newtio.c_iflag &= ~(IXON | IXOFF | IXANY);
 
@@ -119,7 +118,7 @@ int llopen(LinkLayer connectionParameters) {
 
 int llwrite(const unsigned char *buf, int bufSize) {
     int bytes;
-
+    int sequence_number = 0;
     // Send the I-frame
     bytes = send_i_frame(fd, buf, bufSize, sequence_number);
 
