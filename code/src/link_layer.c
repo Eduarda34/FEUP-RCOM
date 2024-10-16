@@ -4,6 +4,7 @@
 #include "serial_port.h"
 #include "state.h"
 #include "message.h"
+#include "alarm.h"
 
 #include <string.h>
 
@@ -26,6 +27,65 @@ int startReceiver (int fd) {
     if (read_message(fd, message, 5, COMMAND_SET) < 0) return -1;
     return send_s_frame(fd, ADDR, 0x07, NO_RESP);
 }
+
+int closeTransmissor(int fd) {
+    // Send DISC frame to the receiver to initiate disconnection
+    if (send_s_frame(fd, ADDR, 0x0B, COMMAND_DISC) < 0) {
+        perror("Error sending DISC frame");
+        return -1;
+    }
+
+    printf("DISC frame sent to receiver\n");
+
+    // Wait for DISC frame from the receiver (acknowledgment)
+    unsigned char message[5];
+    if (read_message(fd, message, 5, COMMAND_DISC) < 0) {
+        perror("Error receiving DISC frame from receiver");
+        return -1;
+    }
+
+    printf("DISC frame received from receiver\n");
+
+    // Send UA frame to acknowledge the connection termination
+    if (send_s_frame(fd, ADDR, 0x03, R_UA) < 0) {
+        perror("Error sending UA frame");
+        return -1;
+    }
+
+    printf("UA frame sent, connection closed\n");
+
+    return 0;
+}
+
+int closeReceiver(int fd) {
+    // Wait for DISC frame from the transmitter
+    unsigned char message[5];
+    if (read_message(fd, message, 5, COMMAND_DISC) < 0) {
+        perror("Error receiving DISC frame from transmitter");
+        return -1;
+    }
+
+    printf("DISC frame received from transmitter\n");
+
+    // Send DISC frame to the transmitter to acknowledge disconnection
+    if (send_s_frame(fd, ADDR, 0x0B, COMMAND_DISC) < 0) {
+        perror("Error sending DISC frame");
+        return -1;
+    }
+
+    printf("DISC frame sent to transmitter\n");
+
+    // Wait for UA frame from the transmitter to confirm connection termination
+    if (read_message(fd, message, 5, R_UA) < 0) {
+        perror("Error receiving UA frame from transmitter");
+        return -1;
+    }
+
+    printf("UA frame received, connection closed\n");
+
+    return 0;
+}
+
 
 //LLPOPEN
 int llopen(LinkLayer connectionParameters) {
@@ -148,14 +208,14 @@ int llclose(int showStatistics) {
     // Handle connection closure based on the current role
     switch (get_curr_role()) {
         case TRANSMITTER:
-            if (close_transmissor(fd) < 0) {
+            if (closeTransmissor(fd) < 0) {
                 perror("Error closing TRANSMITTER");
                 return -1;
             }
             break;
 
         case RECEIVER:
-            if (close_receiver(fd) < 0) {
+            if (closeReceiver (fd) < 0) {
                 perror("Error closing RECEIVER");
                 return -1;
             }
