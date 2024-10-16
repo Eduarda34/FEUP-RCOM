@@ -15,6 +15,7 @@ unsigned char byte;
 int timeout = 0;
 int nretransmissions = 0;
 int fd;
+struct termios oldtio; 
 
 int startTransmissor (int fd) {
     return send_s_frame(fd, ADDR, 0X03, R_UA);
@@ -39,7 +40,7 @@ int llopen(LinkLayer connectionParameters) {
         return -1;
     }
 
-    struct termios newtio, oldtio;
+    struct termios newtio;
 
     // Get current port settings for backup
     if (tcgetattr(fd, &oldtio) == -1) {
