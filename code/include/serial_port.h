@@ -30,3 +30,8 @@ int readByteSerialPort(unsigned char *byte);
 int writeBytesSerialPort(const unsigned char *bytes, int numBytes);
 
 #endif // _SERIAL_PORT_H_
+
+int openSerialPort(const char *serialPort, int baudRate);
+int closeSerialPort();
+int readByteSerialPort(unsigned char *byte);
+int writeBytesSerialPort(const unsigned char *bytes, int numBytes);
