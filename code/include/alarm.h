@@ -10,7 +10,9 @@
 #include <signal.h>
 #include <stdio.h>
 
-// Main Alarm Functions
+////////////////////////////////////////////////
+// MAIN FUNCTIONS
+////////////////////////////////////////////////
 /**
  * @brief resets the alarm counter to zero
  */
@@ -22,7 +24,10 @@ void reset_alarm_count();
  */
 void alarm_handler(int signal);
 
-// Getters
+////////////////////////////////////////////////
+// GETTESS
+////////////////////////////////////////////////
+
 /**
  * @brief Get the alarm count object
  * @return int 
@@ -35,7 +40,10 @@ int get_alarm_count();
  */
 int get_alarm_flag();
 
-// Setters
+////////////////////////////////////////////////
+// SETTERS
+////////////////////////////////////////////////
+
 /**
  * @brief Set the alarm flag object
  * @param flag 

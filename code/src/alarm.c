@@ -1,28 +1,34 @@
-#include "alarm.h"  
+#include "alarm.h"
 
-int alarmEnabled = FALSE;
-int alarmCount = 0;
+// alarm_flag represents if the alarm is enabled or not
+int alarm_flag = FALSE;
+int alarm_count = 0;
 
-void reset_alarm_count() {
-    alarmCount = 0; 
-}
-
-void alarm_handler(int signal)  
+void reset_alarm_count()
 {
-    alarmEnabled = FALSE;
-    alarmCount++;
-
-    printf("Alarm #%d\n", alarmCount);
+    alarm_count = 0;
 }
 
-int get_alarm_count() {
-    return alarmCount;
+void set_alarm_flag(int flag)
+{
+    alarm_flag = flag;
 }
 
-int get_alarm_flag() {
-    return alarmEnabled; 
+int get_alarm_count()
+{
+    return alarm_count;
 }
 
-void set_alarm_flag(int flag) {
-    alarmEnabled = flag; 
+int get_alarm_flag()
+{
+    return alarm_flag;
+}
+
+// Alarm function handler
+void alarm_handler(int signal)
+{
+    set_alarm_flag(TRUE);
+    alarm_count++;
+
+    printf("Alarm #%d\n", alarm_count);
 }
