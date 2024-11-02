@@ -13,15 +13,7 @@ int fd;
 struct termios oldtio; 
 static uint8_t sequence_number = 0;
 
-int startTransmissor (int fd) {
-    return send_s_frame(fd, ADDR, 0X03, R_UA);
-}
 
-int startReceiver (int fd) {
-    unsigned char message[5];
-    if (read_message(fd, message, 5, COMMAND_SET) < 0) return -1;
-    return send_s_frame(fd, ADDR, 0x07, NO_RESP);
-}
 
 
 int llopen(LinkLayer connectionParameters) {
@@ -72,8 +64,27 @@ int llopen(LinkLayer connectionParameters) {
 }
 
 ////////////////////////////////////////////////
-// LLWRITE
+// LLWRITE                                   ///
 ////////////////////////////////////////////////
+int stuff_message(uint8_t *buffer, int start, int msg_size, uint8_t *stuffed_msg)
+{
+    int i = 0;
+    // Copy header without stuffing
+    for (int j = 0; j < start; ++j, ++i)
+        stuffed_msg[i] = buffer[j];
+    // Stuffing
+    for (int j = start; j < msg_size; ++j)
+    {
+        if (buffer[j] == FLAG || buffer[j] == ESCAPE) {
+            stuffed_msg[i++] = ESCAPE;
+            stuffed_msg[i++] = buffer[j] ^ 0x20;
+        } else {
+            stuffed_msg[i++] = buffer[j];
+        }
+    }
+    return i;
+}
+
 int llwrite(const unsigned char *buf, int bufSize)
 {
     int bytes = send_i_frame(fd, buf, bufSize, sequence_number);
@@ -88,6 +99,7 @@ int llwrite(const unsigned char *buf, int bufSize)
     sequence_number ^= 0x01; 
     return bytes;
 }
+
 
 ////////////////////////////////////////////////
 // LLREAD                                    ///
