@@ -56,22 +56,66 @@ typedef struct  {
 ////////////////////////////////////////////////
 uint8_t get_address();
 uint8_t get_control();
+
+/**
+ * @brief Get the current state of the machine
+ * @return current state
+ */
 state get_curr_state();
+
+/**
+ * @brief Get the current role object
+ * @return role 
+ */
 role get_curr_role();
+
+/**
+ * @brief Get the curr command object
+ * @return command currently being handled
+ */
 command get_curr_command();
+
+/**
+ * @brief Get the prev response object
+ * @return response 
+ */
 response get_prev_response();
 
 ////////////////////////////////////////////////
 // SETTERS
 ////////////////////////////////////////////////
+
+/**
+ * @brief Set the state object
+ * @param s 
+ */
 void set_state(state s);
+
+/**
+ * @brief Set the role object
+ * @param r 
+ */
 void set_role(role r);
+
+/**
+ * @brief Set the command object
+ * @param c 
+ */
 void set_command(command c);
 
 ////////////////////////////////////////////////
 // MAIN FUNCTIONS
 ////////////////////////////////////////////////
+
+/**
+ * @brief processes a received byte based on the current state of the state machine, transitioning between different states according to the received protocol frame
+ * @param byte 
+ */
 void update_state(unsigned char byte);
+
+/**
+ * @brief resets the state machine to its initial state
+ */
 void reset_state();
 
 #endif // _STATE_
