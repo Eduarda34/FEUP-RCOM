@@ -236,7 +236,7 @@ void applicationLayer(const char *serialPort, const char *role, int baudRate,
                 break; 
             }
 
-            printf("llread: %d bytes read\n", bytesRead);
+            printf("Bytes read:%d\n", bytesRead);
             if (processReceivedPacket(buf, bytesRead, filename) < 0) {
                 fprintf(stderr, "Error parsing packet\n");
                 exit(EXIT_FAILURE); 
@@ -244,7 +244,7 @@ void applicationLayer(const char *serialPort, const char *role, int baudRate,
 
             // IF END PACKET BREAK 
             if (buf[0] == 3) { 
-                break; // Exit on end packet
+                break; 
             }
         }
     }

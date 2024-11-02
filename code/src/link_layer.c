@@ -159,55 +159,69 @@ int llwrite(const unsigned char *buf, int bufSize)
 }
 
 
-
+////////////////////////////////////////////////
+// LLREAD
+////////////////////////////////////////////////
 int llread(unsigned char *packet) {
-    unsigned char stuffed_msg[MSG_MAX_SIZE * 2]; // To hold the received stuffed message
-    unsigned char destuffed_msg[MSG_MAX_SIZE];   // To hold the destuffed message
-    int bytes;
-
-    // Attempt to read the message from the serial port
-    bytes = read_message(fd, stuffed_msg, sizeof(stuffed_msg), COMMAND_DATA);
-
-    // Check for errors during reading
-    if (bytes == -1) {
-        perror("Error reading message\n");
+    // ALLOC BUFFER - MESSAGE
+    unsigned char *message_buffer = (unsigned char *)malloc(MSG_MAX_SIZE * 2);
+    if (message_buffer == NULL) {
+        perror("Memory allocation for message buffer failed");
         return -1;
     }
 
-    printf("llread: %d bytes read\n", bytes);
+    // READ MESSAGE
+    int bytes_read = read_message(fd, message_buffer, MSG_MAX_SIZE * 2, COMMAND_DATA);
+    if (bytes_read < 0) {
+        free(message_buffer);
+        return -1; 
+    }
 
-    // Perform message de-stuffing
-    int destuffed_len = msg_destuff(stuffed_msg, 4, bytes, destuffed_msg);
-
-    // Ensure the message size is valid
-    if (destuffed_len < 6) { // At least FLAG, ADDR, CONTROL, BCC1, BCC2, FLAG
-        printf("llread: Invalid message length\n");
+    // ALLOC BUFFER - DESTUFFED MESSAGE
+    uint8_t *destuffed_message = (uint8_t *)malloc(MSG_MAX_SIZE);
+    if (destuffed_message == NULL) {
+        perror("Memory allocation for destuffed message failed");
+        free(message_buffer);
         return -1;
     }
 
-    // Verify the BCC1 for header (ADDR ^ CONTROL)
-    if ((destuffed_msg[1] ^ destuffed_msg[2]) != destuffed_msg[3]) {
-        printf("llread: BCC1 verification failed\n");
+    // DESTUFFED MESSAGE
+    int destuffed_message_size = msg_destuff(message_buffer, 4, bytes_read, destuffed_message);
+    free(message_buffer); 
+
+    if (destuffed_message_size < 0) {
+        free(destuffed_message);
+        fprintf(stderr, "Message destuffing failed\n");
         return -1;
     }
 
+    // EXTRACT & GENERATE BCC2
+    unsigned char received_bcc2 = destuffed_message[destuffed_message_size - 2];
+    unsigned char expected_bcc2 = generate_bcc2(destuffed_message + 4, destuffed_message_size - 6);
 
-    // Calculate BCC2 for the data field
-    uint8_t received_bcc2 = destuffed_msg[destuffed_len - 2]; // Second-to-last byte is BCC2
-    uint8_t calculated_bcc2 = generate_bcc2(destuffed_msg + 4, destuffed_len - 6); // Skip FLAG, ADDR, CONTROL, BCC1, FLAG
-
-    // Verify the BCC2 for the data field
-    if (received_bcc2 != calculated_bcc2) {
-        printf("llread: BCC2 verification failed\n");
-        return -1;
+    // CHECK IF BCC2 RECEIVED AND BCC2 EXPECTED EQUA
+    if (received_bcc2 == expected_bcc2) {
+        // VALIDATE SEQUENCE NUMBER
+        if ((get_control() == 0x00 && sequence_number == 0) || (get_control() == 0x40 && sequence_number == 1)) {
+            send_s_frame(fd, ADDR, 0x05 | ((sequence_number ^ 0x01) << 7), NO_RESP);
+            memcpy(packet, destuffed_message + 4, destuffed_message_size - 6);
+            free(destuffed_message);
+            sequence_number ^= 0x01; // TOGGLE SEQUENCE NUMBER
+            return destuffed_message_size - 6; // RETURN SIZE OF DATA
+        } else {
+            // DUPLICATE DATA PACKET RECEIVED
+            send_s_frame(fd, ADDR, 0x05 | (sequence_number << 7), NO_RESP);
+            free(destuffed_message);
+            return -1; 
+        }
     }
 
-    // If everything is correct, copy the data to the provided packet buffer
-    memcpy(packet, destuffed_msg + 4, destuffed_len - 6); // Copy only the data, skipping FLAGs, ADDR, CONTROL, BCCs
-
-    printf("llread: Message successfully read and verified\n");
-    return destuffed_len - 6; // Return the number of data bytes
+    // BCC2 MISMATCH HANDLING
+    send_s_frame(fd, ADDR, 0x01 | ((sequence_number ^ 0x01) << 7), NO_RESP);
+    free(destuffed_message);
+    return -1; 
 }
+
 
 int llclose(int showStatistics) {
     // Handle connection closure based on the current role
