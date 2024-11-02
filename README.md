@@ -49,6 +49,7 @@ The project uses two virtual serial ports to simulate communication:
 
 1. Run the Transmitter <br> ```./bin/main /dev/ttyS10 9600 tx penguin.gif```
 
+&nbsp;
 
 ## Milestones
 
@@ -65,4 +66,4 @@ The project uses two virtual serial ports to simulate communication:
 | Name                                | Up Number | Git                                         |
 | ----------------------------------- | --------- | ------------------------------------------- |
 | Clarisse Maria Teixeira de Carvalho | 202008444 | [MitsukiS16](https://github.com/MitsukiS16) |
-| Maria Eduarda Pacheco Mendes Araújo | 202004473 | [Eduarda34](https://github.com/Eduarda34)   |z
+| Maria Eduarda Pacheco Mendes Araújo | 202004473 | [Eduarda34](https://github.com/Eduarda34)   |
