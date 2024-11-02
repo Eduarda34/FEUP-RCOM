@@ -224,20 +224,28 @@ void applicationLayer(const char *serialPort, const char *role, int baudRate,
     // Receiver: Receive the file
     else if (connectionParameters.role == LlRx) {
         unsigned char buf[MSG_MAX_SIZE - 6] = {0};
-        int res;
 
-        while ((res = llread(buf)) >= 0) {
-            printf("llread: %d bytes read\n", res);
-            if (processReceivedPacket(buf, res, filename) < 0) {
+        while (1) {
+            int bytesRead = llread(buf);
+
+            if (bytesRead < 0) {
+                fprintf(stderr, "llread failed\n");
+                exit(EXIT_FAILURE); 
+            }
+            if (bytesRead == 0) {
+                break; 
+            }
+
+            printf("llread: %d bytes read\n", bytesRead);
+            if (processReceivedPacket(buf, bytesRead, filename) < 0) {
                 fprintf(stderr, "Error parsing packet\n");
-                break;
+                exit(EXIT_FAILURE); 
             }
-            if (buf[0] == 3) { // Check if it's an end packet
-                break;
+
+            // IF END PACKET BREAK 
+            if (buf[0] == 3) { 
+                break; // Exit on end packet
             }
-        }
-        if (res < 0) {
-            fprintf(stderr, "llread failed\n");
         }
     }
 
