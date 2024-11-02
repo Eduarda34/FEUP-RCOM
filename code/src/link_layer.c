@@ -374,8 +374,6 @@ int llread(unsigned char *packet) {
     int destuffed_message_size = destuff_message(message_buffer, 4, bytes_read, destuffed_message);
     free(message_buffer); 
 
-    
-
     if (destuffed_message_size < 0) {
         free(destuffed_message);
         fprintf(stderr, "Message destuffing failed\n");
