@@ -89,10 +89,28 @@ int llwrite(const unsigned char *buf, int bufSize)
     return bytes;
 }
 
+////////////////////////////////////////////////
+// LLREAD                                    ///
+////////////////////////////////////////////////
+int destuff_message(uint8_t *buffer, int start, int msg_size, uint8_t *destuffed_msg)
+{
+    int i = 0;
+    for (int j = 0; j < start; ++j, ++i) {
+        destuffed_msg[i] = buffer[j];
+    }
+    for (int j = start; j < msg_size; j++) {
+        if (buffer[j] == ESCAPE) {
+            destuffed_msg[i] = buffer[j + 1] ^ 0x20;
+            j++;
+            i++;
+        } else {
+            destuffed_msg[i] = buffer[j];
+            i++;
+        }
+    }
+    return i;
+}
 
-////////////////////////////////////////////////
-// LLREAD
-////////////////////////////////////////////////
 int llread(unsigned char *packet) {
     // ALLOC BUFFER - MESSAGE
     unsigned char *message_buffer = (unsigned char *)malloc(MSG_MAX_SIZE * 2);
@@ -117,7 +135,7 @@ int llread(unsigned char *packet) {
     }
 
     // DESTUFFED MESSAGE
-    int destuffed_message_size = msg_destuff(message_buffer, 4, bytes_read, destuffed_message);
+    int destuffed_message_size = destuff_message(message_buffer, 4, bytes_read, destuffed_message);
     free(message_buffer); 
 
     if (destuffed_message_size < 0) {
@@ -126,9 +144,15 @@ int llread(unsigned char *packet) {
         return -1;
     }
 
-    // EXTRACT & GENERATE BCC2
+     // EXTRACT  BCC2
     unsigned char received_bcc2 = destuffed_message[destuffed_message_size - 2];
-    unsigned char expected_bcc2 = generate_bcc2(destuffed_message + 4, destuffed_message_size - 6);
+
+    // GENERATE BCC2 
+    unsigned char expected_bcc2 = destuffed_message[4]; // Initialize with the first byte of data
+    for (int i = 5; i < destuffed_message_size - 2; ++i) { 
+        expected_bcc2 ^= destuffed_message[i];
+    }
+
 
     // CHECK IF BCC2 RECEIVED AND BCC2 EXPECTED EQUA
     if (received_bcc2 == expected_bcc2) {
