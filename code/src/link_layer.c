@@ -1,12 +1,6 @@
 // Link layer protocol implementation
-
 #include "link_layer.h"
-#include "serial_port.h"
-#include "state.h"
-#include "message.h"
-#include "alarm.h"
 
-#include <string.h>
 
 // MISC
 #define _POSIX_SOURCE 1 // POSIX compliant source
@@ -31,7 +25,7 @@ int startReceiver (int fd) {
 int closeTransmissor(int fd) {
     // Send DISC frame to the receiver to initiate disconnection
     if (send_s_frame(fd, ADDR, 0x0B, COMMAND_DISC) < 0) {
-        perror("Error sending DISC frame");
+        perror("Error sending DISC frame\n");
         return -1;
     }
 
@@ -40,7 +34,7 @@ int closeTransmissor(int fd) {
     // Wait for DISC frame from the receiver (acknowledgment)
     unsigned char message[5];
     if (read_message(fd, message, 5, COMMAND_DISC) < 0) {
-        perror("Error receiving DISC frame from receiver");
+        perror("Error receiving DISC frame from receiver\n");
         return -1;
     }
 
@@ -48,7 +42,7 @@ int closeTransmissor(int fd) {
 
     // Send UA frame to acknowledge the connection termination
     if (send_s_frame(fd, ADDR, 0x03, R_UA) < 0) {
-        perror("Error sending UA frame");
+        perror("Error sending UA frame\n");
         return -1;
     }
 
@@ -61,7 +55,7 @@ int closeReceiver(int fd) {
     // Wait for DISC frame from the transmitter
     unsigned char message[5];
     if (read_message(fd, message, 5, COMMAND_DISC) < 0) {
-        perror("Error receiving DISC frame from transmitter");
+        perror("Error receiving DISC frame from transmitter\n");
         return -1;
     }
 
@@ -69,7 +63,7 @@ int closeReceiver(int fd) {
 
     // Send DISC frame to the transmitter to acknowledge disconnection
     if (send_s_frame(fd, ADDR, 0x0B, COMMAND_DISC) < 0) {
-        perror("Error sending DISC frame");
+        perror("Error sending DISC frame\n");
         return -1;
     }
 
@@ -77,7 +71,7 @@ int closeReceiver(int fd) {
 
     // Wait for UA frame from the transmitter to confirm connection termination
     if (read_message(fd, message, 5, R_UA) < 0) {
-        perror("Error receiving UA frame from transmitter");
+        perror("Error receiving UA frame from transmitter\n");
         return -1;
     }
 
@@ -87,79 +81,82 @@ int closeReceiver(int fd) {
 }
 
 
+int openTransmissor () {
+    return 0;
+}
+
+
+int openReceiver () {
+    return 0;
+}
+
 int llopen(LinkLayer connectionParameters) {
-    
-    // Open the serial port with specified parameters
-    fd = openSerialPort(connectionParameters.serialPort, connectionParameters.baudRate);
-    
-    // Check if openSerialPort has encountered an error
-    if (fd < 0) {
-        fprintf(stderr, "Error opening serial port: %s\n", connectionParameters.serialPort);
-        perror("openSerialPort");
-        return -1;
-    }
+   
 
     struct termios newtio;
 
     // Get current port settings for backup
     if (tcgetattr(fd, &oldtio) == -1) {
-        perror("tcgetattr");
+        perror("tcgetattr\n");
         return -1;
     }
 
     memset(&newtio, 0, sizeof(newtio));  // Clear the newtio structure
 
     // Set input and output baud rates
-    cfsetispeed(&newtio, connectionParameters.baudRate);
-    cfsetospeed(&newtio, connectionParameters.baudRate);
+    // cfsetispeed(&newtio, connectionParameters.baudRate);
+    // cfsetospeed(&newtio, connectionParameters.baudRate);
 
-    newtio.c_cflag = connectionParameters.baudRate | CS8 | CLOCAL | CREAD;
-    newtio.c_lflag &= ~(ICANON | ECHO | ECHOE | ISIG);
-    newtio.c_iflag &= ~(IXON | IXOFF | IXANY);
+    // newtio.c_cflag = connectionParameters.baudRate | CS8 | CLOCAL | CREAD;
+    // newtio.c_lflag &= ~(ICANON | ECHO | ECHOE | ISIG);
+    // newtio.c_iflag &= ~(IXON | IXOFF | IXANY);
 
-    // Set minimum characters for read to 0 and timeouts in deciseconds
-    newtio.c_cc[VMIN] = 0;
-    switch (connectionParameters.role) {
-        case TRANSMITTER:
-            newtio.c_cc[VMIN] = 0;                             // Non-blocking read
-            newtio.c_cc[VTIME] = connectionParameters.timeout; // Set timeout in deciseconds
-            break;
+    // // Set minimum characters for read to 0 and timeouts in deciseconds
+    // newtio.c_cc[VMIN] = 0;
+    // switch (connectionParameters.role) {
+    //     case TRANSMITTER:
+    //         newtio.c_cc[VMIN] = 0;                             // Non-blocking read
+    //         newtio.c_cc[VTIME] = connectionParameters.timeout; // Set timeout in deciseconds
+    //         break;
 
-        case RECEIVER:
-            newtio.c_cc[VMIN] = 1; // Blocking read until at least 1 char is received
-            newtio.c_cc[VTIME] = 0; // No timeout, wait indefinitely for a character
-            break;
+    //     case RECEIVER:
+    //         newtio.c_cc[VMIN] = 1; // Blocking read until at least 1 char is received
+    //         newtio.c_cc[VTIME] = 0; // No timeout, wait indefinitely for a character
+    //         break;
 
-        default:
-            fprintf(stderr, "Unknown role: %d\n", connectionParameters.role);
-            return -1;
-    }
+    //     default:
+    //         fprintf(stderr, "Unknown role: %d\n", connectionParameters.role);
+    //         return -1;
+    // }
 
     // Apply the new settings immediately
-    tcflush(fd, TCIOFLUSH);
-    if (tcsetattr(fd, TCSANOW, &newtio) == -1) {
-        perror("tcsetattr");
-        return -1;
-    }
+    //tcflush(fd, TCIOFLUSH);
+    // if (tcsetattr(fd, TCSANOW, &newtio) == -1) {
+    //     perror("tcsetattr\n");
+    //     return -1;
+    // }
 
     printf("********** New structure **********\n");
 
-    (void)signal(SIGALRM, alarm_handler);
+    //(void)signal(SIGALRM, alarm_handler);
 
-    // Determine role: Transmitter or Receiver
     switch (connectionParameters.role) {
-        case TRANSMITTER:
+        case LlTx:
+            printf("Start Transmissor\n");
             set_role(TRANSMITTER);
+            //(void)signal(SIGALRM, alarm_handler);
             if (startTransmissor(fd) < 0) {
-                perror("Error starting transmitter");
+                perror("Error starting transmitter\n");
                 return -1;
             }
+            
             break;
 
-        case RECEIVER:
+        case LlRx:
             set_role(RECEIVER);
-            if (startTransmissor(fd) < 0) {
-                perror("Error starting transmitter");
+            //(void)signal(SIGALRM, alarm_handler);
+            if (startReceiver(fd) < 0) {
+                perror("Error starting transmitter\n");
                 return -1;
             }
             break;
@@ -184,7 +181,7 @@ int llwrite(const unsigned char *buf, int bufSize) {
 
     // Check if sending the frame was successful
     if (bytes == -1) {
-        perror("Error sending I-frame");
+        perror("Error sending I-frame\n");
         return -1;
     }
 
@@ -207,7 +204,7 @@ int llread(unsigned char *packet) {
 
     // Check for errors during reading
     if (bytes == -1) {
-        perror("Error reading message");
+        perror("Error reading message\n");
         return -1;
     }
 
@@ -223,10 +220,11 @@ int llread(unsigned char *packet) {
     }
 
     // Verify the BCC1 for header (ADDR ^ CONTROL)
-    if (destuffed_msg[1] ^ destuffed_msg[2] != destuffed_msg[3]) {
+    if ((destuffed_msg[1] ^ destuffed_msg[2]) != destuffed_msg[3]) {
         printf("llread: BCC1 verification failed\n");
         return -1;
     }
+
 
     // Calculate BCC2 for the data field
     uint8_t received_bcc2 = destuffed_msg[destuffed_len - 2]; // Second-to-last byte is BCC2
@@ -250,14 +248,14 @@ int llclose(int showStatistics) {
     switch (get_curr_role()) {
         case TRANSMITTER:
             if (closeTransmissor(fd) < 0) {
-                perror("Error closing TRANSMITTER");
+                perror("Error closing TRANSMITTER\n");
                 return -1;
             }
             break;
 
         case RECEIVER:
             if (closeReceiver (fd) < 0) {
-                perror("Error closing RECEIVER");
+                perror("Error closing RECEIVER\n");
                 return -1;
             }
             break;
@@ -281,13 +279,13 @@ int llclose(int showStatistics) {
 
     // Restore the original port settings (using the stored oldtio)
     if (tcsetattr(fd, TCSANOW, &oldtio) == -1) {
-        perror("tcsetattr failed");
+        perror("tcsetattr failed\n");
         return -1;
     }
 
     // Close the serial port file descriptor
     if (close(fd) < 0) {
-        perror("Error closing file descriptor");
+        perror("Error closing file descriptor\n");
         return -1;
     }
 

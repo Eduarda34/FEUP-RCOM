@@ -1,6 +1,13 @@
 // Link layer header.
 // NOTE: This file must not be changed.
 
+#include "serial_port.h"
+#include "state.h"
+#include "message.h"
+
+#include <string.h>
+
+
 #ifndef _LINK_LAYER_H_
 #define _LINK_LAYER_H_
 

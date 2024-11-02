@@ -7,6 +7,9 @@
         "limits": "cpp",
         "type_traits": "cpp",
         "xmemory": "cpp",
-        "xutility": "cpp"
+        "xutility": "cpp",
+        "application_layer.h": "c",
+        "link_layer.h": "c",
+        "stdlib.h": "c"
     }
 }
