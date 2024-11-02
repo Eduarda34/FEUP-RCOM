@@ -33,6 +33,11 @@
 
 #define NO_RESPONSE -1
 
+#define _POSIX_SOURCE 1 
+#define ALARM_TIMEOUT 3
+#define MAX_RETRIES 3
+#define MAX_BUFFER_SIZE (MAX_PAYLOAD_SIZE*2)
+
 typedef enum
 {
     LlTx,

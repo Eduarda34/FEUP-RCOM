@@ -1,17 +1,9 @@
 // Link layer protocol implementation
 #include "link_layer.h"
 
-// MISC
-#define _POSIX_SOURCE 1 
-#define ALARM_TIMEOUT 3
-#define MAX_RETRIES 3
-#define MAX_BUFFER_SIZE (MAX_PAYLOAD_SIZE*2)
-
 struct termios oldtioT;
 int fd;
 static uint8_t sequence_number = 0;
-
-
 
 ////////////////////////////////////////////////
 /// AUX                                      ///
