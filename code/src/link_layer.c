@@ -11,6 +11,7 @@ int timeout = 0;
 int nretransmissions = 0;
 int fd;
 struct termios oldtio; 
+static uint8_t sequence_number = 0;
 
 int startTransmissor (int fd) {
     return send_s_frame(fd, ADDR, 0X03, R_UA);
@@ -103,39 +104,6 @@ int llopen(LinkLayer connectionParameters) {
 
     memset(&newtio, 0, sizeof(newtio));  // Clear the newtio structure
 
-    // Set input and output baud rates
-    // cfsetispeed(&newtio, connectionParameters.baudRate);
-    // cfsetospeed(&newtio, connectionParameters.baudRate);
-
-    // newtio.c_cflag = connectionParameters.baudRate | CS8 | CLOCAL | CREAD;
-    // newtio.c_lflag &= ~(ICANON | ECHO | ECHOE | ISIG);
-    // newtio.c_iflag &= ~(IXON | IXOFF | IXANY);
-
-    // // Set minimum characters for read to 0 and timeouts in deciseconds
-    // newtio.c_cc[VMIN] = 0;
-    // switch (connectionParameters.role) {
-    //     case TRANSMITTER:
-    //         newtio.c_cc[VMIN] = 0;                             // Non-blocking read
-    //         newtio.c_cc[VTIME] = connectionParameters.timeout; // Set timeout in deciseconds
-    //         break;
-
-    //     case RECEIVER:
-    //         newtio.c_cc[VMIN] = 1; // Blocking read until at least 1 char is received
-    //         newtio.c_cc[VTIME] = 0; // No timeout, wait indefinitely for a character
-    //         break;
-
-    //     default:
-    //         fprintf(stderr, "Unknown role: %d\n", connectionParameters.role);
-    //         return -1;
-    // }
-
-    // Apply the new settings immediately
-    //tcflush(fd, TCIOFLUSH);
-    // if (tcsetattr(fd, TCSANOW, &newtio) == -1) {
-    //     perror("tcsetattr\n");
-    //     return -1;
-    // }
-
     printf("********** New structure **********\n");
 
     //(void)signal(SIGALRM, alarm_handler);
@@ -172,26 +140,24 @@ int llopen(LinkLayer connectionParameters) {
     return fd;
 }
 
-
-int llwrite(const unsigned char *buf, int bufSize) {
-    int bytes;
-    int sequence_number = 0;
-    // Send the I-frame
-    bytes = send_i_frame(fd, buf, bufSize, sequence_number);
-
-    // Check if sending the frame was successful
+////////////////////////////////////////////////
+// LLWRITE
+////////////////////////////////////////////////
+int llwrite(const unsigned char *buf, int bufSize)
+{
+    int bytes = send_i_frame(fd, buf, bufSize, sequence_number);
     if (bytes == -1) {
-        perror("Error sending I-frame\n");
-        return -1;
+        perror("llwrite: Error sending I-frame");
+        exit(EXIT_FAILURE);
     }
 
-    printf("llwrite: %d bytes written\n", bytes);
-
-    sequence_number ^= 0x01;
-
-    printf("********** Bytes Successfully written **********\n");
+    printf("-----------------------------------\n");
+    printf("Successfully written %d bytes\n", bytes);
+    
+    sequence_number ^= 0x01; 
     return bytes;
 }
+
 
 
 int llread(unsigned char *packet) {
