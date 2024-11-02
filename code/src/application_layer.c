@@ -62,8 +62,8 @@ unsigned char *createStartControlPacket(const char *filename, struct stat *file_
     memset(packet, 0, start_size);
     
     // PACKET DETAILS
-    packet[0] = 2;          // START PACKET ID
-    packet[1] = 0;          // WHY TODO
+    packet[0] = 2;          // PACKET ID
+    packet[1] = 0;          // CONTROL INFO
     packet[2] = l1;         // LEN FILE
     memcpy(&packet[3], &(file_stat->st_size), l1); 
     packet[3 + l1] = 1;     // FILE NAME
@@ -82,9 +82,9 @@ unsigned char *createEndControlPacket(const char *filename, struct stat *file_st
     }
 
     // PACKET DETAILS
-    endpacket[0] = 3;  // WHY TODO
-    endpacket[1] = 0;  // WHY TODO
-    endpacket[2] = l1;   // LEN FILE
+    endpacket[0] = 3;           // ID PACKET
+    endpacket[1] = 0;           // CONTROL INFO
+    endpacket[2] = l1;          // LEN FILE
     memcpy(&endpacket[3], &(file_stat->st_size), l1); 
     endpacket[3 + l1] = 1;     // FILE NAME
     endpacket[4 + l1] = l2;    // FILE LEN
@@ -101,11 +101,11 @@ unsigned char *createDataPayloadPacket(const unsigned char *msg, ssize_t bytes_r
         return NULL; 
     }
 
-    packet[0] = 1;  // Data packet identifier
-    packet[1] = packet_number % 256;  // Packet number modulo 256
-    packet[2] = (bytes_read >> 8) & 0xFF; // High byte of bytes_read
-    packet[3] = bytes_read & 0xFF;        // Low byte of bytes_read
-    memcpy(&packet[4], msg, bytes_read);  // Copy the data into packet
+    packet[0] = 1;                          // DATA ID
+    packet[1] = packet_number % 256;        // PACKET NUMBER
+    packet[2] = (bytes_read >> 8) & 0xFF;   // LEN FILE HIGH BYTE
+    packet[3] = bytes_read & 0xFF;          // LEN FILE LOW BYTE
+    memcpy(&packet[4], msg, bytes_read);    
 
     return packet;
 }

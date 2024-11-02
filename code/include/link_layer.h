@@ -1,15 +1,15 @@
 // Link layer header.
 // NOTE: This file must not be changed.
+#ifndef _LINK_LAYER_H_
+#define _LINK_LAYER_H_
+
 
 #include "serial_port.h"
 #include "state.h"
-#include "message.h"
 
 #include <string.h>
 
-
-#ifndef _LINK_LAYER_H_
-#define _LINK_LAYER_H_
+#define MSG_MAX_SIZE 1000
 
 typedef enum {
     LlTx,
