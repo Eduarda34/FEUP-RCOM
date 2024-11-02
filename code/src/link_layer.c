@@ -2,78 +2,110 @@
 #include "link_layer.h"
 
 // MISC
-#define _POSIX_SOURCE 1 // POSIX compliant source
+#define _POSIX_SOURCE 1 
+#define ALARM_TIMEOUT 3
+#define MAX_RETRIES 3
+#define MAX_BUFFER_SIZE (MAX_PAYLOAD_SIZE*2)
 
 struct termios oldtioT;
 int fd;
 static uint8_t sequence_number = 0;
 
 
-//////////////////////////////////////////////// FALTA CORRIGIR READ AND SEND MESSAGE
-//////////////////////////////////////////////// FALTA CORRIGIR llopen MAS VOU DORMIR
-
 
 ////////////////////////////////////////////////
 /// AUX                                      ///
 ////////////////////////////////////////////////
-int read_message(int fd, uint8_t *buf, int buf_size, command response){
-    int i = 0;
+int read_message(int fd, uint8_t *buf, int buf_size, command response) {
+    int bytesRead = 0;
     reset_state();
     set_command(response);
-    while (get_curr_state() != FINAL_STATE && !get_alarm_flag()) {
-        if (i >= buf_size) break;
-        int bytes = read(fd, buf + i, 1);
-        if (bytes != -1) update_state(buf[i]);
-        i++;
+
+    while (get_curr_state() != FINAL_STATE && !get_alarm_flag() && bytesRead < buf_size) {
+        int bytes = read(fd, buf + bytesRead, 1);
+        
+        if (bytes == -1) {
+            perror("Error reading from file descriptor");
+            return -1;
+        } else if (bytes == 0) {
+            printf("No more data available to read.\n");
+            return -1;
+        }
+
+        update_state(buf[bytesRead]);
+        bytesRead++;
     }
+
     if (get_curr_state() != FINAL_STATE) {
-        printf("Failed to get response!\n");
+        if (get_alarm_flag()) {
+            printf("Failed to get response: Timeout occurred.\n");
+        } else {
+            printf("Failed to get response: Buffer limit reached before final state.\n");
+        }
         return -1;
     }
-    return i;
+
+    return bytesRead;
 }
 
 int send_message(int fd, uint8_t *frame, int msg_size, command response)
 {
-    int bytes;
+    int bytesWritten = 0;
+
     if (response == NO_RESPONSE) { 
-        if ((bytes = write(fd, frame, msg_size)) == -1) {
-            printf("Write failed\n");
+        bytesWritten = write(fd, frame, msg_size);
+        if (bytesWritten == -1) {
+            perror("Write failed");
             return -1;
         }
-        return bytes;
+        return bytesWritten;
     }
+
+    // WRITE RESPONSE
     set_command(response);
     reset_alarm_count();
     reset_state();
-    while (get_alarm_count() < 3 && get_curr_state() != FINAL_STATE) {
+
+    while (get_alarm_count() < MAX_RETRIES && get_curr_state() != FINAL_STATE) {
         set_alarm_flag(FALSE);
-        if ((bytes = write(fd, frame, msg_size)) == -1) {
-            printf("Write failed\n");
+        bytesWritten = write(fd, frame, msg_size);
+
+        if (bytesWritten == -1) {
+            perror("Write failed");
             return -1;
         }
+
         printf("Message sent\n");
-        unsigned char buf[MAX_PAYLOAD_SIZE*2] = {0};
-        alarm(3);
-        int i = 0;
+        
+        unsigned char buf[MAX_BUFFER_SIZE] = {0};
+        alarm(ALARM_TIMEOUT);
+        int bytesRead = 0;
+
+        // LOOP UNTIL FINAL STATE OR TIMEOUT
         while (get_curr_state() != FINAL_STATE && !get_alarm_flag()) {
-            if (i >= (MAX_PAYLOAD_SIZE*2)) {
-                continue;
+            if (bytesRead >= MAX_BUFFER_SIZE) {
+                printf("Buffer overflow\n");
+                break;
             }
-            int read_byte = read(fd, buf + i, 1);
-            if (read_byte != -1) {
-                update_state(buf[i]);
+
+            int read_byte = read(fd, buf + bytesRead, 1);
+            if (read_byte == -1) {
+                perror("Read error");
+                return -1;
+            } else if (read_byte > 0) {
+                update_state(buf[bytesRead]);
+                bytesRead++;
             }
-            i++;
         }
     }
 
+    // CHECK IF FINAL STATE REACHED
     if (get_curr_state() != FINAL_STATE) {
-        printf("Failed to get response!\n");
+        printf("Failed to receive expected response!\n");
         return -1;
     }
 
-    return bytes;
+    return bytesWritten;
 }
 
 uint8_t *create_s_frame_buffer(uint8_t address, uint8_t control) {
@@ -287,12 +319,11 @@ int llwrite(const unsigned char *buf, int bufSize)
     }
 
     printf("-----------------------------------\n");
-    printf("Successfully written %d bytes\n", bytes);
+    printf("Bytes uccessfully written: %d\n", bytes);
     
     sequence_number ^= 0x01; 
     return bytes;
 }
-
 
 ////////////////////////////////////////////////
 // LLREAD                                    ///
@@ -342,6 +373,8 @@ int llread(unsigned char *packet) {
     // DESTUFFED MESSAGE
     int destuffed_message_size = destuff_message(message_buffer, 4, bytes_read, destuffed_message);
     free(message_buffer); 
+
+    
 
     if (destuffed_message_size < 0) {
         free(destuffed_message);

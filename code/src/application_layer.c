@@ -200,7 +200,7 @@ void applicationLayer(const char *serialPort, const char *role, int baudRate,
                 exit(EXIT_FAILURE);
             }
 
-            printf("Sent packet %d\n", packet_number);
+            printf("Sent packet: %d\n", packet_number);
             packet_number++;
             free(data_packet);
         }
@@ -236,7 +236,7 @@ void applicationLayer(const char *serialPort, const char *role, int baudRate,
                 break; 
             }
 
-            printf("Bytes read:%d\n", bytesRead);
+            printf("Bytes read: %d\n", bytesRead);
             if (processReceivedPacket(buf, bytesRead, filename) < 0) {
                 fprintf(stderr, "Error parsing packet\n");
                 exit(EXIT_FAILURE); 
