@@ -85,9 +85,69 @@ int stuff_message(uint8_t *buffer, int start, int msg_size, uint8_t *stuffed_msg
     return i;
 }
 
+void prepare_buffer(uint8_t *buffer, const uint8_t *data, int data_len, int packet) {
+    buffer[0] = FLAG;
+    buffer[1] = ADDR_E;
+    buffer[2] = (packet << 6);
+    buffer[3] = BCC(buffer[1], buffer[2]);
+
+    uint8_t bcc2 = 0;
+    for (int i = 0; i < data_len; i++) {
+        buffer[i + 4] = data[i];
+        bcc2 ^= data[i];
+    }
+    buffer[data_len + 4] = bcc2;
+}
+
+int create_stuffed_message(uint8_t *buffer, int msg_len, uint8_t *stuffed_msg) {
+    msg_len = stuff_message(buffer, 4, msg_len, stuffed_msg);
+    stuffed_msg[msg_len++] = FLAG; 
+    return msg_len;
+}
+
+int transmit_frame(int fd, const uint8_t *data, int data_len, int packet){
+    int msg_len = data_len + 5;
+    uint8_t *buffer = (uint8_t *)malloc(msg_len);
+    if (!buffer) {
+        perror("Memory allocation failed");
+        return -1;
+    }
+
+    // PREPARE BUFFER
+    prepare_buffer(buffer, data, data_len, packet); 
+    uint8_t stuffed_msg[msg_len * 2];
+
+    // CREATE STUFFED MESSAGE
+    msg_len = create_stuffed_message(buffer, msg_len, stuffed_msg);
+
+    free(buffer);
+
+    for (int w = 0; w < 3; w++) {
+        int bytes = send_message(fd, stuffed_msg, msg_len, RESPONSE_REJ);
+        if (bytes == -1) {
+            printf("Failed to send message correctly\n");
+            return -1;
+        }
+
+        // CHECK IF OKAY OR REJ
+        if ((packet == 0 && get_prev_response() == PA_F1) ||
+            (packet == 1 && get_prev_response() == PA_F0)) {
+            printf("Positive Acknowledgement :)\n");
+            return bytes; // Successful transmission
+        }
+        if ((packet == 0 && get_prev_response() == REJ_F1) ||
+            (packet == 1 && get_prev_response() == REJ_F0)) {
+            printf("Invalid message sent and rejected\n");
+            continue; // Retry sending
+        }
+    }
+
+    return -1;
+}
+
 int llwrite(const unsigned char *buf, int bufSize)
 {
-    int bytes = send_i_frame(fd, buf, bufSize, sequence_number);
+    int bytes = transmit_frame(fd, buf, bufSize, sequence_number);
     if (bytes == -1) {
         perror("llwrite: Error sending I-frame");
         exit(EXIT_FAILURE);
