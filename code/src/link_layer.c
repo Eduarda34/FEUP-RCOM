@@ -151,7 +151,7 @@ int llopen(LinkLayer connectionParameters) {
     if (fd < 0) {
         printf("%s", connectionParameters.serialPort);
         perror(connectionParameters.serialPort);
-        exit(EXIT_FAILURE);
+        exit(-1);
     }
 
     struct termios newtio;
@@ -159,7 +159,7 @@ int llopen(LinkLayer connectionParameters) {
     // SAVE PORT SETTINGS
     if (tcgetattr(fd, &oldtioT) == -1)  {
         perror("tcgetattr");
-        exit(EXIT_FAILURE);
+        exit(-1);
     }
 
     // NEW PORT SETTINGS
@@ -252,7 +252,7 @@ uint8_t *create_i_frame_buffer(const uint8_t *data, int data_len, int packet) {
     uint8_t *buffer = (uint8_t *)malloc(msg_len);
     if (buffer == NULL) {
         perror("Memory allocation failed");
-        exit(EXIT_FAILURE);
+        exit(-1);
     }
 
     // INIT HEADER
@@ -315,7 +315,7 @@ int llwrite(const unsigned char *buf, int bufSize)
     int bytes = transmit_information_frame(fd, buf, bufSize, sequence_number);
     if (bytes == -1) {
         perror("llwrite: Error sending I-frame");
-        exit(EXIT_FAILURE);
+        exit(-1);
     }
 
     printf("-----------------------------------\n");
@@ -483,7 +483,7 @@ int llclose(int showStatistics) {
     if (tcsetattr(fd, TCSANOW, &oldtioT) == -1)
     {
         perror("Failed to restore port settings");
-        exit(EXIT_FAILURE);
+        exit(-1);
     }
 
     close(fd);

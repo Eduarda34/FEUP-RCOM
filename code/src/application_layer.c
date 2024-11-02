@@ -128,7 +128,7 @@ void applicationLayer(const char *serialPort, const char *role, int baudRate,
         connectionParameters.role = LlRx;  // Receiver
     } else {
         perror("Error: Role not stored correctly.\n");
-        exit(1);
+        exit(-1);
     }
 
     connectionParameters.baudRate = baudRate;
@@ -137,7 +137,7 @@ void applicationLayer(const char *serialPort, const char *role, int baudRate,
 
     if (llopen(connectionParameters) < 0){
         perror("llopen failed.\n");
-        exit(EXIT_FAILURE);
+        exit(-1);
     }
 
     if (connectionParameters.role == LlTx) {
@@ -146,12 +146,12 @@ void applicationLayer(const char *serialPort, const char *role, int baudRate,
 
         if (stat(filename, &file_stat) < 0) {
             perror("Error getting file information.\n");
-            exit(EXIT_FAILURE);
+            exit(-1);
         }
 
         if ((file_fd = open(filename, O_RDONLY)) < 0) {
             perror("Error opening file.\n");
-            exit(EXIT_FAILURE);
+            exit(-1);
         }
 
         int l1 = sizeof(file_stat.st_size);
@@ -160,14 +160,14 @@ void applicationLayer(const char *serialPort, const char *role, int baudRate,
         if (!packet) {
             fprintf(stderr, "Failed to create data packet.\n");
             close(file_fd);
-            exit(EXIT_FAILURE);
+            exit(-1);
         }
         
         if (llwrite(packet, 5 + l1 + l2) < 0) {
             perror("llwrite failed.\n");
             free(packet);
             close(file_fd);
-            exit(EXIT_FAILURE);
+            exit(-1);
         }
 
         free(packet);
@@ -179,7 +179,7 @@ void applicationLayer(const char *serialPort, const char *role, int baudRate,
             ssize_t bytes_read = read(file_fd, msg, MAX_PAYLOAD_SIZE - 10);  
             if (bytes_read < 0) {
                 perror("Error reading file\n");
-                exit(EXIT_FAILURE);
+                exit(-1);
             }
 
             // END FILE
@@ -191,13 +191,13 @@ void applicationLayer(const char *serialPort, const char *role, int baudRate,
             if (!data_packet) {
                 fprintf(stderr, "Failed to create data packet\n");
                 close(file_fd);
-                exit(EXIT_FAILURE);
+                exit(-1);
             }
 
             if (llwrite(data_packet, bytes_read + 4) < 0) {
                 perror("llwrite failed for data packet\n");
                 free(data_packet);
-                exit(EXIT_FAILURE);
+                exit(-1);
             }
 
             printf("Sent packet: %d\n", packet_number);
@@ -210,7 +210,7 @@ void applicationLayer(const char *serialPort, const char *role, int baudRate,
         if (!end_packet) {
             fprintf(stderr, "Failed to create end packet\n");
             close(file_fd);
-            exit(EXIT_FAILURE);
+            exit(-1);
         }
 
         end_packet[0] = 3;
@@ -230,7 +230,7 @@ void applicationLayer(const char *serialPort, const char *role, int baudRate,
 
             if (bytesRead < 0) {
                 fprintf(stderr, "llread failed\n");
-                exit(EXIT_FAILURE); 
+                exit(-1); 
             }
             if (bytesRead == 0) {
                 break; 
@@ -239,7 +239,7 @@ void applicationLayer(const char *serialPort, const char *role, int baudRate,
             printf("Bytes read: %d\n", bytesRead);
             if (processReceivedPacket(buf, bytesRead, filename) < 0) {
                 fprintf(stderr, "Error parsing packet\n");
-                exit(EXIT_FAILURE); 
+                exit(-1); 
             }
 
             // IF END PACKET BREAK 
@@ -251,11 +251,11 @@ void applicationLayer(const char *serialPort, const char *role, int baudRate,
 
     else {
         perror("Unidentified Role\n");
-        exit(EXIT_FAILURE);
+        exit(-1);
     }
 
     if (llclose(0) < 0) {
         perror("Error closing the connection\n");
-        exit(EXIT_FAILURE);
+        exit(-1);
     }
 }
