@@ -56,7 +56,6 @@ typedef struct  {
 ////////////////////////////////////////////////
 uint8_t get_address();
 uint8_t get_control();
-uint8_t get_flag();
 state get_curr_state();
 role get_curr_role();
 command get_curr_command();
@@ -65,16 +64,14 @@ response get_prev_response();
 ////////////////////////////////////////////////
 // SETTERS
 ////////////////////////////////////////////////
-void set_address(uint8_t s);
-void set_control(uint8_t s);
 void set_state(state s);
 void set_role(role r);
 void set_command(command c);
 
 ////////////////////////////////////////////////
-// OTHERS
+// MAIN FUNCTIONS
 ////////////////////////////////////////////////
-void update_state(uint8_t byte);
+void update_state(unsigned char byte);
 void reset_state();
 
 #endif // _STATE_
