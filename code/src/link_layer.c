@@ -36,7 +36,7 @@ int read_message(int fd, uint8_t *buf, int buf_size, command response){
 int send_message(int fd, uint8_t *frame, int msg_size, command response)
 {
     int bytes;
-    if (response == NO_RESP) { 
+    if (response == NO_RESPONSE) { 
         if ((bytes = write(fd, frame, msg_size)) == -1) {
             printf("Write failed\n");
             return -1;
@@ -53,11 +53,11 @@ int send_message(int fd, uint8_t *frame, int msg_size, command response)
             return -1;
         }
         printf("Message sent\n");
-        unsigned char buf[MSG_MAX_SIZE*2] = {0};
+        unsigned char buf[MAX_PAYLOAD_SIZE*2] = {0};
         alarm(3);
         int i = 0;
         while (get_curr_state() != FINAL_STATE && !get_alarm_flag()) {
-            if (i >= (MSG_MAX_SIZE*2)) {
+            if (i >= (MAX_PAYLOAD_SIZE*2)) {
                 continue;
             }
             int read_byte = read(fd, buf + i, 1);
@@ -111,41 +111,36 @@ int start_transmissor(int fd){
 int start_receiver(int fd){
     unsigned char message[5];
     if (read_message(fd, message, 5, COMMAND_SET) < 0) return -1;
-    return send_s_frame(fd, ADDR, 0x07, NO_RESP);
+    return send_s_frame(fd, ADDR, 0x07, NO_RESPONSE);
 }
 
 int llopen(LinkLayer connectionParameters) {
-
-    // Open serial port device for reading and writing and not as controlling tty
-    // because we don't want to get killed if linenoise sends CTRL-C.
     fd = open(connectionParameters.serialPort, O_RDWR | O_NOCTTY);
-
-    if (fd < 0)     {
+    if (fd < 0) {
         printf("%s", connectionParameters.serialPort);
         perror(connectionParameters.serialPort);
-        exit(-1);
+        exit(EXIT_FAILURE);
     }
 
     struct termios newtio;
 
-    // Save current port settings
+    // SAVE PORT SETTINGS
     if (tcgetattr(fd, &oldtioT) == -1)  {
         perror("tcgetattr");
-        exit(-1);
+        exit(EXIT_FAILURE);
     }
 
-    // Clear struct for new port settings
+    // NEW PORT SETTINGS
     memset(&newtio, 0, sizeof(newtio));
 
     newtio.c_cflag = connectionParameters.baudRate | CS8 | CLOCAL | CREAD;
     newtio.c_iflag = IGNPAR;
     newtio.c_oflag = 0;
 
-    // Set input mode (non-canonical, no echo,...)
+    // SET INPUT
     newtio.c_lflag = 0;
     newtio.c_cc[VTIME] = 0;
-    switch (connectionParameters.role)
-    {
+    switch (connectionParameters.role) {
     case TRANSMITTER:
         newtio.c_cc[VMIN] = 0;                             
         newtio.c_cc[VTIME] = connectionParameters.timeout; 
@@ -178,12 +173,10 @@ int llopen(LinkLayer connectionParameters) {
     case RECEIVER:
         set_role(RECEIVER);
         (void)signal(SIGALRM, alarm_handler);
-
         if (start_receiver(fd) < 0) {
             printf("Could not start RECEIVER\n");
             return -1;
         }
-
         break;
     }
 
@@ -193,7 +186,6 @@ int llopen(LinkLayer connectionParameters) {
 
     return fd;
 }
-
 
 ////////////////////////////////////////////////
 // LLWRITE                                   ///
@@ -233,7 +225,7 @@ uint8_t *create_i_frame_buffer(const uint8_t *data, int data_len, int packet) {
 
     // INIT HEADER
     buffer[0] = FLAG;
-    buffer[1] = ADDR_E;
+    buffer[1] = EMITTER_ADDR;
     buffer[2] = (packet << 6); // Control field with sequence number
     buffer[3] = BCC(buffer[1], buffer[2]);
 
@@ -326,21 +318,21 @@ int destuff_message(uint8_t *buffer, int start, int msg_size, uint8_t *destuffed
 
 int llread(unsigned char *packet) {
     // ALLOC BUFFER - MESSAGE
-    unsigned char *message_buffer = (unsigned char *)malloc(MSG_MAX_SIZE * 2);
+    unsigned char *message_buffer = (unsigned char *)malloc(MAX_PAYLOAD_SIZE * 2);
     if (message_buffer == NULL) {
         perror("Memory allocation for message buffer failed");
         return -1;
     }
 
     // READ MESSAGE
-    int bytes_read = read_message(fd, message_buffer, MSG_MAX_SIZE * 2, COMMAND_DATA);
+    int bytes_read = read_message(fd, message_buffer, MAX_PAYLOAD_SIZE * 2, COMMAND_DATA);
     if (bytes_read < 0) {
         free(message_buffer);
         return -1; 
     }
 
     // ALLOC BUFFER - DESTUFFED MESSAGE
-    uint8_t *destuffed_message = (uint8_t *)malloc(MSG_MAX_SIZE);
+    uint8_t *destuffed_message = (uint8_t *)malloc(MAX_PAYLOAD_SIZE);
     if (destuffed_message == NULL) {
         perror("Memory allocation for destuffed message failed");
         free(message_buffer);
@@ -371,21 +363,21 @@ int llread(unsigned char *packet) {
     if (received_bcc2 == expected_bcc2) {
         // VALIDATE SEQUENCE NUMBER
         if ((get_control() == 0x00 && sequence_number == 0) || (get_control() == 0x40 && sequence_number == 1)) {
-            send_s_frame(fd, ADDR, 0x05 | ((sequence_number ^ 0x01) << 7), NO_RESP);
+            send_s_frame(fd, ADDR, 0x05 | ((sequence_number ^ 0x01) << 7), NO_RESPONSE);
             memcpy(packet, destuffed_message + 4, destuffed_message_size - 6);
             free(destuffed_message);
             sequence_number ^= 0x01; // TOGGLE SEQUENCE NUMBER
             return destuffed_message_size - 6; // RETURN SIZE OF DATA
         } else {
             // DUPLICATE DATA PACKET RECEIVED
-            send_s_frame(fd, ADDR, 0x05 | (sequence_number << 7), NO_RESP);
+            send_s_frame(fd, ADDR, 0x05 | (sequence_number << 7), NO_RESPONSE);
             free(destuffed_message);
             return -1; 
         }
     }
 
     // BCC2 MISMATCH HANDLING
-    send_s_frame(fd, ADDR, 0x01 | ((sequence_number ^ 0x01) << 7), NO_RESP);
+    send_s_frame(fd, ADDR, 0x01 | ((sequence_number ^ 0x01) << 7), NO_RESPONSE);
     free(destuffed_message);
     return -1; 
 }
@@ -420,7 +412,7 @@ int close_transmitter(int fd) {
     }
 
     // Send an Unnumbered Acknowledge (UA) response
-    if (send_s_frame(fd, ADDR, 0x07, NO_RESP) < 0) {
+    if (send_s_frame(fd, ADDR, 0x07, NO_RESPONSE) < 0) {
         fprintf(stderr, "Error sending UA response from transmitter.\n");
         return -1;
     }

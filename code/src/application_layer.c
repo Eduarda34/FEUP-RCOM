@@ -172,11 +172,11 @@ void applicationLayer(const char *serialPort, const char *role, int baudRate,
 
         free(packet);
 
-        unsigned char msg[MSG_MAX_SIZE - 6]; 
+        unsigned char msg[MAX_PAYLOAD_SIZE - 6]; 
         unsigned packet_number = 0;
 
         while (1) {
-            ssize_t bytes_read = read(file_fd, msg, MSG_MAX_SIZE - 10);  
+            ssize_t bytes_read = read(file_fd, msg, MAX_PAYLOAD_SIZE - 10);  
             if (bytes_read < 0) {
                 perror("Error reading file\n");
                 exit(EXIT_FAILURE);
@@ -223,7 +223,7 @@ void applicationLayer(const char *serialPort, const char *role, int baudRate,
     }
     // Receiver: Receive the file
     else if (connectionParameters.role == LlRx) {
-        unsigned char buf[MSG_MAX_SIZE - 6] = {0};
+        unsigned char buf[MAX_PAYLOAD_SIZE - 6] = {0};
 
         while (1) {
             int bytesRead = llread(buf);

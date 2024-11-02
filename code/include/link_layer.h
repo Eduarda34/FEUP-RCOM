@@ -21,7 +21,7 @@
 // Message
 #define CTRL_S(s) ((s == 0) ? 0 : BIT(6))
 #define BCC(a, b) ((a) ^ (b))
-#define ADDR_E 0x03
+#define EMITTER_ADDR 0x03
 
 #define CTRL_SET 0x03
 #define CTRL_DISC 0x0B
@@ -29,9 +29,9 @@
 #define CTRL_RR(r) ((r == 0) ? 0x05 : 0x85)
 #define CTRL_REJ(r) ((r == 0) ? 0x01 : 0x81)
 
-#define MSG_MAX_SIZE 1000
+#define MAX_PAYLOAD_SIZE 1000
 
-#define NO_RESP -1
+#define NO_RESPONSE -1
 
 typedef enum
 {
