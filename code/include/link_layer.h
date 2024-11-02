@@ -1,22 +1,46 @@
 // Link layer header.
 // NOTE: This file must not be changed.
+
 #ifndef _LINK_LAYER_H_
 #define _LINK_LAYER_H_
 
-
-#include "serial_port.h"
 #include "state.h"
+#include "alarm.h"
 
+#include <fcntl.h>
+#include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <termios.h>
+#include <unistd.h>
+
+#define BIT(n) (1 << n)
+
+// Message
+#define CTRL_S(s) ((s == 0) ? 0 : BIT(6))
+#define BCC(a, b) ((a) ^ (b))
+#define ADDR_E 0x03
+
+#define CTRL_SET 0x03
+#define CTRL_DISC 0x0B
+#define CTRL_UA 0x07
+#define CTRL_RR(r) ((r == 0) ? 0x05 : 0x85)
+#define CTRL_REJ(r) ((r == 0) ? 0x01 : 0x81)
 
 #define MSG_MAX_SIZE 1000
 
-typedef enum {
+#define NO_RESP -1
+
+typedef enum
+{
     LlTx,
     LlRx,
 } LinkLayerRole;
 
-typedef struct {
+typedef struct
+{
     char serialPort[50];
     LinkLayerRole role;
     int baudRate;
@@ -27,10 +51,6 @@ typedef struct {
 // SIZE of maximum acceptable payload.
 // Maximum number of bytes that application layer should send to link layer
 #define MAX_PAYLOAD_SIZE 1000
-
-// MISC
-#define FALSE 0
-#define TRUE 1
 
 // Open a connection using the "port" parameters defined in struct linkLayer.
 // Return "1" on success or "-1" on error.

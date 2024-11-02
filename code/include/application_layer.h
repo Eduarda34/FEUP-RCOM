@@ -18,7 +18,6 @@
 
 #define DATA_SIZE 1024
 
-
 // Application layer main function.
 // Arguments:
 //   serialPort: Serial port name (e.g., /dev/ttyS0).
