@@ -23,77 +23,8 @@ int startReceiver (int fd) {
     return send_s_frame(fd, ADDR, 0x07, NO_RESP);
 }
 
-int closeTransmissor(int fd) {
-    // Send DISC frame to the receiver to initiate disconnection
-    if (send_s_frame(fd, ADDR, 0x0B, COMMAND_DISC) < 0) {
-        perror("Error sending DISC frame\n");
-        return -1;
-    }
-
-    printf("DISC frame sent to receiver\n");
-
-    // Wait for DISC frame from the receiver (acknowledgment)
-    unsigned char message[5];
-    if (read_message(fd, message, 5, COMMAND_DISC) < 0) {
-        perror("Error receiving DISC frame from receiver\n");
-        return -1;
-    }
-
-    printf("DISC frame received from receiver\n");
-
-    // Send UA frame to acknowledge the connection termination
-    if (send_s_frame(fd, ADDR, 0x03, R_UA) < 0) {
-        perror("Error sending UA frame\n");
-        return -1;
-    }
-
-    printf("UA frame sent, connection closed\n");
-
-    return 0;
-}
-
-int closeReceiver(int fd) {
-    // Wait for DISC frame from the transmitter
-    unsigned char message[5];
-    if (read_message(fd, message, 5, COMMAND_DISC) < 0) {
-        perror("Error receiving DISC frame from transmitter\n");
-        return -1;
-    }
-
-    printf("DISC frame received from transmitter\n");
-
-    // Send DISC frame to the transmitter to acknowledge disconnection
-    if (send_s_frame(fd, ADDR, 0x0B, COMMAND_DISC) < 0) {
-        perror("Error sending DISC frame\n");
-        return -1;
-    }
-
-    printf("DISC frame sent to transmitter\n");
-
-    // Wait for UA frame from the transmitter to confirm connection termination
-    if (read_message(fd, message, 5, R_UA) < 0) {
-        perror("Error receiving UA frame from transmitter\n");
-        return -1;
-    }
-
-    printf("UA frame received, connection closed\n");
-
-    return 0;
-}
-
-
-int openTransmissor () {
-    return 0;
-}
-
-
-int openReceiver () {
-    return 0;
-}
 
 int llopen(LinkLayer connectionParameters) {
-   
-
     struct termios newtio;
 
     // Get current port settings for backup
@@ -222,55 +153,78 @@ int llread(unsigned char *packet) {
     return -1; 
 }
 
+////////////////////////////////////////////////
+// LLCLOSE
+////////////////////////////////////////////////
+int close_receiver(int fd) {
+    printf("Disconnecting receiver...\n");
+    unsigned char message[5];
+
+    if (read_message(fd, message, sizeof(message), COMMAND_DISC) < 0) {
+        fprintf(stderr, "Error reading disconnect message from receiver.\n");
+        return -1;
+    }
+
+    if (send_s_frame(fd, ADDR, 0x0B, RESPONSE_UA) < 0) {
+        fprintf(stderr, "Error sending UA response from receiver.\n");
+        return -1;
+    }
+
+    return 0; // Indicate success
+}
+
+int close_transmitter(int fd) {
+    printf("Disconnecting transmitter...\n");
+
+    // Send a disconnect command
+    if (send_s_frame(fd, ADDR, 0x0B, COMMAND_DISC) < 0) {
+        fprintf(stderr, "Error sending disconnect command from transmitter.\n");
+        return -1;
+    }
+
+    // Send an Unnumbered Acknowledge (UA) response
+    if (send_s_frame(fd, ADDR, 0x07, NO_RESP) < 0) {
+        fprintf(stderr, "Error sending UA response from transmitter.\n");
+        return -1;
+    }
+
+    return 0; // Indicate success
+}
 
 int llclose(int showStatistics) {
-    // Handle connection closure based on the current role
-    switch (get_curr_role()) {
+    int result = 0; 
+    
+    switch (get_curr_role())
+    {
         case TRANSMITTER:
-            if (closeTransmissor(fd) < 0) {
-                perror("Error closing TRANSMITTER\n");
+            result = close_transmitter(fd);
+            if (result < 0) {
+                fprintf(stderr, "Failed to close TRANSMITTER.\n");
                 return -1;
             }
             break;
 
         case RECEIVER:
-            if (closeReceiver (fd) < 0) {
-                perror("Error closing RECEIVER\n");
+            result = close_receiver(fd);
+            if (result < 0){
+                fprintf(stderr, "Failed to close RECEIVER.\n");
                 return -1;
             }
             break;
-
         default:
-            // In case of an unknown role, return error
-            fprintf(stderr, "Unknown role: %d\n", get_curr_role());
-            return -1;
+            fprintf(stderr, "Unknown role during close operation.\n");
+            return -1; 
     }
 
-    // Indicate the start of the connection closing process
     printf("Closing connection...\n");
+    sleep(1); 
 
-    // Optional: If showStatistics is needed, you can print here (you can expand this later)
-    if (showStatistics) {
-        printf("Statistics: Data transmitted successfully.\n");
+    if (tcsetattr(fd, TCSANOW, &oldtioT) == -1)
+    {
+        perror("Failed to restore port settings");
+        exit(EXIT_FAILURE);
     }
 
-    // Delay to ensure the closure has time to finish
-    sleep(1);
-
-    // Restore the original port settings (using the stored oldtio)
-    if (tcsetattr(fd, TCSANOW, &oldtio) == -1) {
-        perror("tcsetattr failed\n");
-        return -1;
-    }
-
-    // Close the serial port file descriptor
-    if (close(fd) < 0) {
-        perror("Error closing file descriptor\n");
-        return -1;
-    }
-
-    // Return success
-    return 1;
+    close(fd);
+    return 1; 
 }
-
-
