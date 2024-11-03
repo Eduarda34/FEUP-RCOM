@@ -411,6 +411,7 @@ int llread(unsigned char *packet) {
 // LLCLOSE
 ////////////////////////////////////////////////
 int close_receiver(int fd) {
+    printf("-----------------------------------\n");
     printf("Disconnecting receiver...\n");
     unsigned char message[5];
 
