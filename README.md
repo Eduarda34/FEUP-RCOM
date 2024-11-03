@@ -34,10 +34,10 @@ To run our application, follow these simple steps:
 
 #### Simulate Serial Port 
 
-0. Clean terminal <br> ```clean``
+0. Clean terminal <br> ```clean```
 1. Clean workspace <br> ```make clean```
-2. Compile program <br> ``make all```
-3. Run cable <br> ````sudo make run_cable```
+2. Compile program <br> ```make all```
+3. Run cable <br> ```sudo make run_cable```
 
 The project uses two virtual serial ports to simulate communication:
 
