@@ -103,7 +103,7 @@ int send_message(int fd, uint8_t *frame, int msg_size, command response)
 uint8_t *create_s_frame_buffer(uint8_t address, uint8_t control) {
     uint8_t *buffer = (uint8_t *)malloc(5);
     if (buffer == NULL) {
-        return NULL; // Handle memory allocation failure
+        return NULL; 
     }
     memset(buffer, 0, 5);
     buffer[0] = FLAG;
@@ -176,7 +176,7 @@ int llopen(LinkLayer connectionParameters) {
 
     tcflush(fd, TCIOFLUSH);
 
-    // Set new port settings
+    // SET NEW PORT SETTINGS
     if (tcsetattr(fd, TCSANOW, &newtio) == -1) {
         perror("tcsetattr");
         exit(-1);
@@ -217,10 +217,12 @@ int llopen(LinkLayer connectionParameters) {
 int stuff_message(uint8_t *buffer, int start, int msg_size, uint8_t *stuffed_msg)
 {
     int i = 0;
-    // Copy header without stuffing
+
+    // COPY HEADER
     for (int j = 0; j < start; ++j, ++i)
         stuffed_msg[i] = buffer[j];
-    // Stuffing
+
+    // STUFFING
     for (int j = start; j < msg_size; ++j)
     {
         if (buffer[j] == FLAG || buffer[j] == ESCAPE) {
@@ -230,6 +232,7 @@ int stuff_message(uint8_t *buffer, int start, int msg_size, uint8_t *stuffed_msg
             stuffed_msg[i++] = buffer[j];
         }
     }
+
     return i;
 }
 
@@ -250,7 +253,7 @@ uint8_t *create_i_frame_buffer(const uint8_t *data, int data_len, int packet) {
     // INIT HEADER
     buffer[0] = FLAG;
     buffer[1] = EMITTER_ADDR;
-    buffer[2] = (packet << 6); // Control field with sequence number
+    buffer[2] = (packet << 6); 
     buffer[3] = BCC(buffer[1], buffer[2]);
 
     // COMPUTE BCC2
@@ -259,26 +262,25 @@ uint8_t *create_i_frame_buffer(const uint8_t *data, int data_len, int packet) {
         buffer[i + 4] = data[i];
         bcc2 ^= data[i]; 
     }
+
     buffer[data_len + 4] = bcc2;
     return buffer;
 }
 
 int transmit_information_frame(int fd, const uint8_t *data, int data_len, int packet) {
-    // Call create_i_frame_buffer to allocate and prepare the I-frame
     uint8_t *buffer = create_i_frame_buffer(data, data_len, packet);
     if (!buffer) {
-        return -1; // Handle memory allocation failure
+        return -1;
     }
 
-    // Buffer length includes header, data, BCC2, and FLAG
     int msg_len = data_len + 5;
     uint8_t stuffed_msg[msg_len * 2];
 
-    // Create stuffed message
+    // CREATE STUFFED MESSAGE
     msg_len = create_stuffed_message(buffer, msg_len, stuffed_msg);
     free(buffer); // Free the allocated I-frame buffer after stuffing
 
-    // Sending process
+    // SEND PROCESS
     for (int w = 0; w < 3; w++) {
         int bytes = send_message(fd, stuffed_msg, msg_len, RESPONSE_REJ);
         if (bytes == -1) {
@@ -286,7 +288,7 @@ int transmit_information_frame(int fd, const uint8_t *data, int data_len, int pa
             return -1;
         }
 
-        // Check response
+        // CHECK RESPONSE
         if ((packet == 0 && get_prev_response() == PA_F1) ||
             (packet == 1 && get_prev_response() == PA_F0)) {
             printf("Positive Acknowledgement :)\n");
@@ -311,7 +313,7 @@ int llwrite(const unsigned char *buf, int bufSize)
     }
 
     printf("-----------------------------------\n");
-    printf("Bytes uccessfully written: %d\n", bytes);
+    printf("Bytes successfully written: %d\n", bytes);
     
     sequence_number ^= 0x01; 
     return bytes;
@@ -381,9 +383,9 @@ int llread(unsigned char *packet) {
         expected_bcc2 ^= destuffed_message[i];
     }
 
-
     // CHECK IF BCC2 RECEIVED AND BCC2 EXPECTED EQUA
     if (received_bcc2 == expected_bcc2) {
+
         // VALIDATE SEQUENCE NUMBER
         if ((get_control() == 0x00 && sequence_number == 0) || (get_control() == 0x40 && sequence_number == 1)) {
             send_s_frame(fd, ADDR, 0x05 | ((sequence_number ^ 0x01) << 7), NO_RESPONSE);
@@ -422,7 +424,7 @@ int close_receiver(int fd) {
         return -1;
     }
 
-    return 0; // Indicate success
+    return 0; 
 }
 
 int close_transmitter(int fd) {
