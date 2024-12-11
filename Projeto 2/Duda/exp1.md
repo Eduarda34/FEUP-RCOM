@@ -7,12 +7,12 @@
 - **GTK TUXY4:**
 ```bash
     - configurações - port - baud - rate = 115200
-    - /system reset-configuration
+    /system reset-configuration
 ```
 - **TERMINAL TUXY4:**
 ```bash
-    - ifconfig
-    - route -n
+    ifconfig
+    route -n
 ```
 - Ligar os cabos (tuxY3 E0 e tuxY4 E0)
 - tuxY4:
