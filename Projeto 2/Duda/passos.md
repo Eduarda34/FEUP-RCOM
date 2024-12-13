@@ -131,9 +131,9 @@ MAC: 00:e0:7d:b5:8c:8e
   - /interface bridge port remove [find interface=ether1]
   - /interface bridge port remove [find interface=ether3]
   - /interface bridge port remove [find interface=ether5]
-  - /interface bridge port add interface=etherX1 bridge=bridge60
-  - /interface bridge port add interface=etherX2 bridge=bridge60
-  - /interface bridge port add interface=etherX3 bridge=bridge61
+  - /interface bridge port add interface=ether1 bridge=bridge60
+  - /interface bridge port add interface=ether3 bridge=bridge60
+  - /interface bridge port add interface=ether5 bridge=bridge61
   - /interface bridge print brief
 ```
 
@@ -199,6 +199,8 @@ tux3:
 ping 172.16.60.254
 ping 172.16.61.253
 ping 172.16.61.1
+ping google.com
+ping netlab.fe.up.pt
 
 
 ## Exp.4 (cabo cinza - 6.12 para eth1 router)
