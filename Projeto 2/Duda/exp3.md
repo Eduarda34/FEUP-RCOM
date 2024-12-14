@@ -30,7 +30,7 @@
 
 - tuxY3:
 ```bash
-    route add default de 172.16.60.254
+    route add default gw 172.16.60.254
 ```
 ![](docs\img\exp3-term3.jpg)
 
