@@ -5,36 +5,36 @@
 **GTK ROUTER:**
 ```bash
     /ip address add address=172.16.1.49/24 interface=ether9
+    /ip address add address=172.16.41.254/24 interface=ether2
 ```
 
-**GTK:**
+**TERMINAL**
+- tuxY4:
 ```bash
-    /interface bridge port remove [find interface=ether10]
-    /interface bridge port add interface=ether24 bridge=bridge41
+    route add -net 172.16.1.0/24 gw 172.16.41.254
 ```
 
-**GTK ROUTER:**
+- tuxY3:
 ```bash
-    ip address add address=172.16.41.254/24 interface=ether2
+    route add -net 172.16.41.0/24 gw 172.16.40.254
+    route add -net 172.16.1.0/24 gw 172.16.40.254
+```
+
+- tuxY2:
+```bash
+    route add -net 172.16.40.0/24 gw 172.16.41.253
+    route add -net 172.16.1.0/24 gw 172.16.44.254
 ```
 
 **GTK ROUTER:**
    /ip address add address=172.16.1.49/24 interface=ether1
    /ip address add address=172.16.41.254/24 interface=ether2
 
-- tuxY4:
-```bash
-    route add default gw 172.16.41.254
-```
 
-- tuxY3:
+**GTK:**
 ```bash
-    route add default gw 172.16.40.254
-```
-
-- tuxY2:
-```bash
-    route add default gw 172.16.41.254
+    /interface bridge port remove [find interface=ether10]
+    /interface bridge port add interface=ether24 bridge=bridge41
 ```
 
 **GTK ROUTER**
